@@ -45,7 +45,13 @@ def _get_vat_info(vat: str) -> dict:
 
         return 'some server error', 500
     print('result: ', result)
-    return result
+    return {
+        'varNumber': result.get('varNumber', ''),
+        'countryCode': result.get('countryCode', ''),
+        'valid': result.get('isValid', False),
+        'name': result.get('name', ''),
+        'address': result.get('address', '')
+    }
 
 
 @app.route('/check/<vatid>/', methods=('GET',))
