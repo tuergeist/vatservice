@@ -1,9 +1,10 @@
 import os
 
 import zeep
-from flask import Flask, request
+from flask import Flask
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from zeep.transports import Transport
 
 VIES_URL = "http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
@@ -19,7 +20,9 @@ migrate = Migrate()
 migrate.init_app(app, db)
 db.create_all()
 
-client = zeep.Client(VIES_URL)
+transport = Transport(timeout=int(os.getenv('EU_TIMEOUT', 10)))
+client = zeep.Client(VIES_URL, transport=transport)
+
 
 class Company(db.Model):
     # https://de.wikipedia.org/wiki/Umsatzsteuer-Identifikationsnummer#Aufbau_der_Identifikationsnummer
