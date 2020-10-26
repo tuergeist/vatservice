@@ -1,1 +1,1 @@
-web: flask db upgrade; gunicorn vatservice:app
+web: flask db upgrade; gunicorn -w 4 vatservice:app
