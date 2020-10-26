@@ -48,13 +48,17 @@ def _get_vat_info(vat: str) -> dict:
 
         return 'some server error', 500
     print('result: ', result)
-    return {
-        'varNumber': result.get('varNumber', ''),
-        'countryCode': result.get('countryCode', ''),
-        'valid': result.get('isValid', False),
-        'name': result.get('name', ''),
-        'address': result.get('address', '')
-    }
+    try:
+        return {
+            'varNumber': result['vatNumber'],
+            'countryCode': result['countryCode'],
+            'valid': result['valid'],
+            'name': result['name'],
+            'address': result['address']
+        }
+    except Exception as e:
+        print('Exception: ', e)
+        return 'unknown error', 500
 
 
 @app.route('/check/<vatid>/', methods=('GET',))
@@ -64,3 +68,8 @@ def get_vat_info(vatid):
         return {'error': 'Need vatid as query parameter to check'}, 400
 
     return _get_vat_info(vatid)
+
+
+@app.route('/')
+def home():
+    return 'Usage: /check/&lt;vatid_to_check&gt;/'
