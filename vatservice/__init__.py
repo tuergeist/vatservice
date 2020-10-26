@@ -1,3 +1,4 @@
+import json
 import os
 
 import zeep
@@ -49,13 +50,13 @@ def _get_vat_info(vat: str) -> dict:
         return 'some server error', 500
     print('result: ', result)
     try:
-        return {
-            'varNumber': result['vatNumber'],
+        return json.dumps({
+            'vatNumber': result['vatNumber'],
             'countryCode': result['countryCode'],
             'valid': result['valid'],
             'name': result['name'],
             'address': result['address']
-        }
+        }, ensure_ascii=False)
     except Exception as e:
         print('Exception: ', e)
         return 'unknown error', 500
