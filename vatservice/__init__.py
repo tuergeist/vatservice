@@ -84,3 +84,9 @@ def get_vat_info(vatid):
 @app.route('/')
 def home():
     return 'Usage: /check/&lt;vatid_to_check&gt;/'
+
+
+@app.route('/stats/')
+def stats():
+    num_comps = db.session.query(Company).skalar()
+    return {'companies_in_db': num_comps}
