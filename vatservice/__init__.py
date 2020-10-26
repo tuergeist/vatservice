@@ -1,9 +1,11 @@
 import os
 
+import zeep
 from flask import Flask, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import create_engine
+
+VIES_URL = "http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
 
 app = Flask(__name__)
 
@@ -17,6 +19,7 @@ migrate = Migrate()
 migrate.init_app(app, db)
 db.create_all()
 
+client = zeep.Client(VIES_URL)
 
 class Company(db.Model):
     # https://de.wikipedia.org/wiki/Umsatzsteuer-Identifikationsnummer#Aufbau_der_Identifikationsnummer
@@ -26,8 +29,29 @@ class Company(db.Model):
     valid = db.Column(db.Boolean())
 
 
-@app.route('/', methods=('GET',))
-def get_vat_info():
-    vatid = request.args.get('vatid')
+class ServiceError(Exception):
+    pass
+
+
+def _get_vat_info(vat: str) -> dict:
+    print('get info')
+
+    try:
+        print('checkvat')
+        result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
+        print('checkvat done')
+    except zeep.exceptions.Fault as fault:
+        print('CheckVAT Error: %s' % fault)
+
+        return 'some server error', 500
+    print('result: ', result)
+    return result
+
+
+@app.route('/check/<vatid>/', methods=('GET',))
+def get_vat_info(vatid):
+    print(vatid)
     if vatid is None:
-        return 'Need vatid as parameter to check', 400
+        return {'error': 'Need vatid as query parameter to check'}, 400
+
+    return _get_vat_info(vatid)
