@@ -75,7 +75,7 @@ def _get_vat_info(vat_in: str) -> dict:
 
 @app.route('/check/<vatid>/', methods=('GET',))
 def get_vat_info(vatid):
-    ip_address = request.remote_addr
+    ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
     print(ip_address, ' requested info for VATID: ', vatid)
     if vatid is None:
         return {'error': 'Need vatid as query parameter to check'}, 400
