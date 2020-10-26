@@ -32,31 +32,41 @@ class Company(db.Model):
     address = db.Column(db.Text(), nullable=True)
     valid = db.Column(db.Boolean())
 
+    def get_json(self):
+        return json.dumps({
+            'vatNumber': self.vatNumber[2:],
+            'countryCode': self.vatNumber[:2],
+            'valid': self.valid,
+            'name': self.name,
+            'address': self.address
+        }, ensure_ascii=False)
+
 
 class ServiceError(Exception):
     pass
 
 
 def _get_vat_info(vat: str) -> dict:
-    print('get info')
+    company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
+    if company is not None:
+        print('database result')
+        return company.get_json()
 
     try:
-        print('checkvat')
         result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
-        print('checkvat done')
     except zeep.exceptions.Fault as fault:
         print('CheckVAT Error: %s' % fault)
-
         return 'some server error', 500
-    print('result: ', result)
+    print('SOAP result')
     try:
-        return json.dumps({
-            'vatNumber': result['vatNumber'],
-            'countryCode': result['countryCode'],
-            'valid': result['valid'],
-            'name': result['name'],
-            'address': result['address']
-        }, ensure_ascii=False)
+        company = Company(vatNumber=f"{result['countryCode']}{result['vatNumber']}",
+                          name=result['name'],
+                          valid=result['valid'],
+                          address=result['address']
+                          )
+        db.session.add(company)
+        db.session.commit()
+        return company.get_json()
     except Exception as e:
         print('Exception: ', e)
         return 'unknown error', 500
@@ -64,7 +74,7 @@ def _get_vat_info(vat: str) -> dict:
 
 @app.route('/check/<vatid>/', methods=('GET',))
 def get_vat_info(vatid):
-    print(vatid)
+    print('Requested info for: ', vatid)
     if vatid is None:
         return {'error': 'Need vatid as query parameter to check'}, 400
 
