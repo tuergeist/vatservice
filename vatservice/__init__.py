@@ -46,7 +46,8 @@ class ServiceError(Exception):
     pass
 
 
-def _get_vat_info(vat: str) -> dict:
+def _get_vat_info(vat_in: str) -> dict:
+    vat = vat_in.strip().replace(' ', '')
     company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
     if company is not None:
         print('database result')
