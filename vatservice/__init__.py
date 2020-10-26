@@ -6,7 +6,7 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from zeep.transports import Transport
 
-VIES_URL = "http://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl"
+VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
 app = Flask(__name__)
 
