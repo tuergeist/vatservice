@@ -2,7 +2,7 @@ import json
 import os
 
 import zeep
-from flask import Flask
+from flask import Flask, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from zeep.transports import Transport
@@ -74,7 +74,8 @@ def _get_vat_info(vat: str) -> dict:
 
 @app.route('/check/<vatid>/', methods=('GET',))
 def get_vat_info(vatid):
-    print('Requested info for: ', vatid)
+    ip_address = request.remote_addr
+    print(ip_address, ' requested info for VATID: ', vatid)
     if vatid is None:
         return {'error': 'Need vatid as query parameter to check'}, 400
 
@@ -88,5 +89,5 @@ def home():
 
 @app.route('/stats/')
 def stats():
-    num_comps = db.session.query(Company).skalar()
+    num_comps = db.session.query(Company).count()
     return {'companies_in_db': num_comps}
