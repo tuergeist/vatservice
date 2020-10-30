@@ -47,6 +47,7 @@ class ServiceError(Exception):
 
 
 def _get_vat_info(vat_in: str) -> dict:
+    result = {'valid': False}
     vat = vat_in.strip().replace(' ', '')
     company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
     if company is not None:
@@ -57,7 +58,8 @@ def _get_vat_info(vat_in: str) -> dict:
         result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
     except zeep.exceptions.Fault as fault:
         print('CheckVAT Error: %s' % fault)
-        return 'some server error', 500
+        result['error'] = f"VAT construction is invalid: {vat}"
+        return result, 400
     print('SOAP result')
     try:
         company = Company(vatNumber=f"{result['countryCode']}{result['vatNumber']}",
