@@ -1,6 +1,7 @@
 import json
 import os
 
+import sqlalchemy
 import zeep
 from flask import Flask, request
 from flask_migrate import Migrate
@@ -16,7 +17,7 @@ app.config.from_mapping(
     SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
-db = SQLAlchemy(app)
+db = SQLAlchemy(app, engine_options={'pool_pre_ping': True})
 migrate = Migrate()
 migrate.init_app(app, db)
 db.create_all()
@@ -46,10 +47,24 @@ class ServiceError(Exception):
     pass
 
 
+def get_company(vat: str) -> Company:
+    company = None
+    try:
+        company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
+    except  sqlalchemy.exc.OperationalError as err:
+        print('ERROR ', err)
+    return company
+
+
+def get_clean_vat(vat_in: str) -> str:
+    return vat_in.strip().replace(' ', '')
+
+
 def _get_vat_info(vat_in: str) -> dict:
     result = {'valid': False}
-    vat = vat_in.strip().replace(' ', '')
-    company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
+    vat = get_clean_vat(vat_in)
+    company = get_company(vat)
+
     if company is not None:
         print('database result')
         return company.get_json()
@@ -61,6 +76,7 @@ def _get_vat_info(vat_in: str) -> dict:
         result['error'] = f"VAT construction is invalid: {vat}"
         return result, 400
     print('SOAP result')
+
     try:
         company = Company(vatNumber=f"{result['countryCode']}{result['vatNumber']}",
                           name=result['name'],
@@ -78,7 +94,7 @@ def _get_vat_info(vat_in: str) -> dict:
 @app.route('/check/<vatid>/', methods=('GET',))
 def get_vat_info(vatid):
     ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
-    print(ip_address, ' requested info for VATID: ', vatid)
+    print(ip_address, 'requested info for VATID:', vatid)
     if vatid is None:
         return {'error': 'Need vatid as query parameter to check'}, 400
 
