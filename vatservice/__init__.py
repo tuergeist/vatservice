@@ -1,5 +1,6 @@
 import json
 import os
+from pprint import pprint
 
 import sqlalchemy
 import zeep
@@ -8,11 +9,13 @@ from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from zeep.transports import Transport
 
+print(50* ' -=-')
+
 VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
 DISABLE_REMOTE_CHECK = bool(os.getenv('DISABLE_REMOTE_CHECK', True))
 DB_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres')
-
+pprint(os.environ)
 if os.getenv('RDS_HOSTNAME'):
     # eb specific
     print('Taking DB Config from RDS Vars')
