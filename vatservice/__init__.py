@@ -11,13 +11,21 @@ from zeep.transports import Transport
 VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
 DISABLE_REMOTE_CHECK = bool(os.getenv('DISABLE_REMOTE_CHECK', True))
+DB_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres')
+
+if os.getenv('RDS_HOSTNAME'):
+    # eb specific
+    print('Taking DB Config from RDS Vars')
+    DB_URL = f"postgres://{os.getenv('RDS_USERNAME')}:{os.getenv('RDS_PASSWORD')}@{os.getenv('RDS_HOSTNAME')}:{os.getenv('RDS_PORT')}/{os.getenv('RDS_DB_NAME')}"
+
+print("Using for Database: ", DB_URL)
+
 
 app = Flask(__name__)
 
 app.config.from_mapping(
     SECRET_KEY=os.environ.get('SECRET_KEY', 'dev_key'),
-    SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL',
-                                           'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres'),
+    SQLALCHEMY_DATABASE_URI=DB_URL,
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 db = SQLAlchemy(app, engine_options={'pool_pre_ping': True})
