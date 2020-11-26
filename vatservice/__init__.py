@@ -10,11 +10,14 @@ from zeep.transports import Transport
 
 VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
+DISABLE_REMOTE_CHECK = bool(os.getenv('DISABLE_REMOTE_CHECK', True))
+
 app = Flask(__name__)
 
 app.config.from_mapping(
-    SECRET_KEY=os.environ.get('SECRET_KEY') or 'dev_key',
-    SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL'),
+    SECRET_KEY=os.environ.get('SECRET_KEY', 'dev_key'),
+    SQLALCHEMY_DATABASE_URI=os.environ.get('DATABASE_URL',
+                                           'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres'),
     SQLALCHEMY_TRACK_MODIFICATIONS=False,
 )
 db = SQLAlchemy(app, engine_options={'pool_pre_ping': True})
@@ -69,13 +72,23 @@ def _get_vat_info(vat_in: str) -> dict:
         print('database result')
         return company.get_json()
 
-    try:
-        result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
-    except zeep.exceptions.Fault as fault:
-        print('CheckVAT Error: %s' % fault)
-        result['error'] = f"VAT construction is invalid: {vat}"
-        return result, 400
-    print('SOAP result')
+    if DISABLE_REMOTE_CHECK:
+        try:
+            result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
+        except zeep.exceptions.Fault as fault:
+            print('CheckVAT Error: %s' % fault)
+            result['error'] = f"VAT construction is invalid: {vat}"
+            return result, 400
+        print('CheckVAT SOAP result')
+    else:
+        print('Fake a result')
+        result = {
+            'countryCode': vat[:2],
+            'vatNumber': vat[2:],
+            'valid': False,
+            'address': 'FAKED',
+            'name': ''
+        }
 
     try:
         company = Company(vatNumber=f"{result['countryCode']}{result['vatNumber']}",
