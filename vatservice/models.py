@@ -1,3 +1,5 @@
+import json
+
 from vatservice import db
 
 
@@ -7,3 +9,12 @@ class Company(db.Model):
     name = db.Column(db.Text(), nullable=True)
     address = db.Column(db.Text(), nullable=True)
     valid = db.Column(db.Boolean())
+
+    def get_json(self):
+        return json.dumps({
+            'vatNumber': self.vatNumber[2:],
+            'countryCode': self.vatNumber[:2],
+            'valid': self.valid,
+            'name': self.name,
+            'address': self.address
+        }, ensure_ascii=False)
