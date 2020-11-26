@@ -11,7 +11,7 @@ from zeep.transports import Transport
 print(10 * ' ---', 'START VAT SERVICE', 10 * '--- ')
 
 VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
-USE_VIES = os.getenv('USE_VIES', True)
+USE_VIES = os.getenv('USE_VIES')
 PROXY_URL = os.getenv('PROXY_URL')
 DB_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres')
 
