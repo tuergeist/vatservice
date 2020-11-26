@@ -10,18 +10,19 @@ from flask_sqlalchemy import SQLAlchemy
 from zeep.transports import Transport
 
 print(50* ' -=-')
+pprint(os.environ)
 
 VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/checkVatService.wsdl")
 
-DISABLE_REMOTE_CHECK = bool(os.getenv('DISABLE_REMOTE_CHECK', True))
+DISABLE_REMOTE_CHECK = os.getenv('DISABLE_REMOTE_CHECK', True) in [False, 'False', 'false', 0]
 DB_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres')
-pprint(os.environ)
 if os.getenv('RDS_HOSTNAME'):
     # eb specific
     print('Taking DB Config from RDS Vars')
     DB_URL = f"postgres://{os.getenv('RDS_USERNAME')}:{os.getenv('RDS_PASSWORD')}@{os.getenv('RDS_HOSTNAME')}:{os.getenv('RDS_PORT')}/{os.getenv('RDS_DB_NAME')}"
 
 print("Using for Database: ", DB_URL)
+print("Disable remote check: ", DISABLE_REMOTE_CHECK)
 
 
 app = Flask(__name__)
@@ -36,8 +37,8 @@ migrate = Migrate()
 migrate.init_app(app, db)
 db.create_all()
 
-transport = Transport(timeout=int(os.getenv('EU_TIMEOUT', 10)))
 if not DISABLE_REMOTE_CHECK:
+    transport = Transport(timeout=int(os.getenv('EU_TIMEOUT', 10)))
     client = zeep.Client(VIES_URL, transport=transport)
 
 fakes = 0
