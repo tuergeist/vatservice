@@ -29,6 +29,8 @@ transport = Transport(timeout=int(os.getenv('EU_TIMEOUT', 10)))
 if not DISABLE_REMOTE_CHECK:
     client = zeep.Client(VIES_URL, transport=transport)
 
+fakes = 0
+
 
 class Company(db.Model):
     # https://de.wikipedia.org/wiki/Umsatzsteuer-Identifikationsnummer#Aufbau_der_Identifikationsnummer
@@ -73,7 +75,7 @@ def _get_vat_info(vat_in: str) -> dict:
         print('database result')
         return company.get_json()
 
-    if DISABLE_REMOTE_CHECK:
+    if not DISABLE_REMOTE_CHECK:
         try:
             result = client.service.checkVat(countryCode=vat[:2], vatNumber=vat[2:])
         except zeep.exceptions.Fault as fault:
@@ -123,4 +125,6 @@ def home():
 @app.route('/stats/')
 def stats():
     num_comps = db.session.query(Company).count()
-    return {'companies_in_db': num_comps}
+    return {
+        'companies_in_db': num_comps
+    }
