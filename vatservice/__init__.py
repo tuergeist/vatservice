@@ -26,7 +26,8 @@ migrate.init_app(app, db)
 db.create_all()
 
 transport = Transport(timeout=int(os.getenv('EU_TIMEOUT', 10)))
-client = zeep.Client(VIES_URL, transport=transport)
+if not DISABLE_REMOTE_CHECK:
+    client = zeep.Client(VIES_URL, transport=transport)
 
 
 class Company(db.Model):
