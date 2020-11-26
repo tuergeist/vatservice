@@ -82,7 +82,7 @@ def get_clean_vat(vat_in: str) -> str:
 
 
 def _get_fake_result(vat):
-    print('Fake a result')
+    print('Fake a result', vat)
     result = {
         'countryCode': vat[:2],
         'vatNumber': vat[2:],
@@ -98,6 +98,7 @@ def _get_proxy_result(vat):
     if r.status_code != 200:
         print(f"Got error from proxy service: {r.content}")
         return _get_fake_result(vat)
+    print('proxy result', vat)
     return r.json()
 
 
@@ -107,7 +108,7 @@ def _get_vat_info(vat_in: str) -> tuple:
     company = get_company(vat)
 
     if company is not None:
-        print('database result')
+        print('database result', vat)
         return company.get_json(), 200
 
     if not USE_VIES:
@@ -153,7 +154,7 @@ def get_vat_info(vatid):
 
 @app.route('/')
 def home():
-    return 'Usage: /check/&lt;vatid_to_check&gt;/'
+    return 'contact info@exb.de'
 
 
 @app.route('/stats/')
