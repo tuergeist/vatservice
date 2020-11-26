@@ -66,14 +66,14 @@ def get_clean_vat(vat_in: str) -> str:
     return vat_in.strip().replace(' ', '')
 
 
-def _get_vat_info(vat_in: str) -> dict:
+def _get_vat_info(vat_in: str) -> tuple:
     result = {'valid': False}
     vat = get_clean_vat(vat_in)
     company = get_company(vat)
 
     if company is not None:
         print('database result')
-        return company.get_json()
+        return company.get_json(), 200
 
     if not DISABLE_REMOTE_CHECK:
         try:
@@ -101,7 +101,7 @@ def _get_vat_info(vat_in: str) -> dict:
                           )
         db.session.add(company)
         db.session.commit()
-        return company.get_json()
+        return company.get_json(), 200
     except Exception as e:
         print('Exception: ', e)
         return 'unknown error', 500
@@ -126,5 +126,6 @@ def home():
 def stats():
     num_comps = db.session.query(Company).count()
     return {
-        'companies_in_db': num_comps
+        'companies_in_db': num_comps,
+        'vies_service_enabled': not DISABLE_REMOTE_CHECK,
     }
