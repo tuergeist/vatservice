@@ -3,7 +3,7 @@
 * have your AWS account set up properly (updated `~/.aws/credentails` file)
 
 ```bash
-eb init -p python-3.7 vatservice --region eu-central-1
+eb init -p python-3.7 vatservice --region eu-west-1
 eb create vatservice-env
 eb open
 ```
