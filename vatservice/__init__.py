@@ -15,7 +15,7 @@ VIES_URL = os.getenv('VIES_URL', "https://ec.europa.eu/taxation_customs/vies/che
 
 USE_VIES = os.getenv('USE_VIES')
 
-PROXY_URL = os.getenv('PROXY_URL', 'http://vat2-env.eba-qvmdgadk.eu-central-1.elasticbeanstalk.com')
+PROXY_URL = os.getenv('PROXY_URL')
 
 DB_URL = os.environ.get('DATABASE_URL', 'postgres://postgres:mysecretpassword@172.17.0.3:5432/postgres')
 if os.getenv('RDS_HOSTNAME'):
@@ -158,6 +158,7 @@ def stats():
     num_comps = db.session.query(Company).count()
     return {
         'companies_in_db': num_comps,
-        'vies_service_enabled': USE_VIES and not PROXY_URL,
-        'use_proxy': PROXY_URL,
+        'vies_service_enabled': USE_VIES,
+        'proxy_url': PROXY_URL,
+        'use_proxy': PROXY_URL and not USE_VIES
     }
