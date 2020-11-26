@@ -7,6 +7,7 @@ import zeep
 from flask import Flask, request
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import IntegrityError
 from zeep.transports import Transport
 
 print(10 * ' -=-', 'START VAT SERVICE', 10 * '-=- ')
@@ -71,7 +72,7 @@ def get_company(vat: str) -> Company:
     company = None
     try:
         company = db.session.query(Company).filter_by(vatNumber=vat).one_or_none()
-    except  sqlalchemy.exc.OperationalError as err:
+    except sqlalchemy.exc.OperationalError as err:
         print('ERROR ', err)
     return company
 
@@ -132,10 +133,12 @@ def _get_vat_info(vat_in: str) -> tuple:
                           )
         db.session.add(company)
         db.session.commit()
-        return company.get_json(), 200
+    except IntegrityError as e:
+        db.session.rollback()
     except Exception as e:
         print('Exception: ', e)
         return 'unknown error', 500
+    return company.get_json(), 200
 
 
 @app.route('/check/<vatid>/', methods=('GET',))
